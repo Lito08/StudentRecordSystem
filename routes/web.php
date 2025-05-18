@@ -2,7 +2,7 @@
 
 use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\{LecturerController,StudentController,CourseController,GradeController};
+use App\Http\Controllers\{LecturerController,StudentController,CourseController,GradeController, EnrolmentController};
 
 Route::get('/', function () {
     return auth()->check()
@@ -33,9 +33,10 @@ Route::middleware(['auth','role:admin'])->group(function () {
 Route::middleware(['auth','role:admin|lecturer'])->group(function () {
     Route::post('courses/{course}/grades',        [GradeController::class,'store'])->name('grades.store');
 
-    /* NEW mark-sheet */
     Route::get ('courses/{course}/grades-sheet',  [GradeController::class,'sheet'])->name('grades.sheet');
     Route::post('courses/{course}/grades-sheet',  [GradeController::class,'saveSheet'])->name('grades.saveSheet');
+    Route::post('courses/{course}/enrolments',   [EnrolmentController::class,'store'])->name('enrolments.store');
+    Route::delete('courses/{course}/enrolments/{student}',[EnrolmentController::class,'destroy'])->name('enrolments.destroy');
 });
 
 Route::middleware(['auth','role:student'])->get('/my-grades',

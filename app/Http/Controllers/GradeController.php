@@ -12,7 +12,7 @@ class GradeController extends Controller
     {
         $this->authorize('view', $course);
 
-        $students = Student::orderBy('name')->get();
+        $students = $course->students()->orderBy('name')->get();
 
         // convert to array so [] accessor works in Blade
         $grades = Grade::where('course_id', $course->id)

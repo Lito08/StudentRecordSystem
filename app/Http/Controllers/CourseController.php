@@ -60,8 +60,9 @@ class CourseController extends Controller
      */
     public function edit(Course $course)
     {
+        $allStudents = \App\Models\Student::orderBy('name')->get();
         $lecturers = User::role('lecturer')->pluck('name', 'id');
-        return view('courses.edit', compact('course','lecturers'));
+        return view('courses.edit', compact('course', 'lecturers', 'allStudents'));
     }
 
     /**

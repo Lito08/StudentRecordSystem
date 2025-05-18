@@ -6,8 +6,9 @@ use Illuminate\Database\Eloquent\Model;
 
 class Student extends Model
 {
+    /* ─── Mass-assignable columns ───────────────────────────── */
     protected $fillable = [
-        'user_id',      // ← add this so mass-assignment works
+        'user_id',
         'name',
         'email',
         'date_of_birth',
@@ -15,12 +16,28 @@ class Student extends Model
         'phone',
     ];
 
+    /* ─── Relationships ─────────────────────────────────────── */
+
+    /** 1-to-1 link back to the user record */
     public function user()
     {
-        return $this->belongsTo(\App\Models\User::class);
+        return $this->belongsTo(User::class);
     }
 
-    public function grades()  { return $this->hasMany(Grade::class); }
-    public function courses() { return $this->belongsToMany(Course::class, Grade::class); }
-}
+    /** 1-to-many: all grade rows for this student */
+    public function grades()
+    {
+        return $this->hasMany(Grade::class);
+    }
 
+    /**
+     * Many-to-many: courses the student is enrolled in.
+     * Uses the enrolments pivot table (student_id, course_id, status, timestamps).
+     */
+    public function courses()
+    {
+        return $this->belongsToMany(Course::class, 'enrolments')
+                    ->withPivot('status')
+                    ->withTimestamps();
+    }
+}
