@@ -8,9 +8,12 @@ use App\Models\User; // lecturers
 
 class CourseController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
+    public function __construct()
+    {
+        // Applies viewAny, view, create, update, delete automatically
+        $this->authorizeResource(\App\Models\Course::class, 'course');
+    }
+
     public function index()
     {
         $user = auth()->user();
