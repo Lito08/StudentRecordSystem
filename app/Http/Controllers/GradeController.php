@@ -4,88 +4,68 @@ namespace App\Http\Controllers;
 
 use App\Models\{Course, Grade, Student};
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Gate;
 
 class GradeController extends Controller
 {
-    /**
-     * @method void authorize(string|array $ability, mixed $arguments = [])
-     */
-    public function index(Course $course)
+    public function sheet(Course $course)
     {
         $this->authorize('view', $course);
-        $grades   = Grade::with('student')
-                     ->where('course_id', $course->id)->get();
-        $students = Student::orderBy('name')->get(); // for add-grade form
-        return view('grades.index', compact('course','grades','students'));
+
+        $students = Student::orderBy('name')->get();
+
+        // convert to array so [] accessor works in Blade
+        $grades = Grade::where('course_id', $course->id)
+                    ->pluck('grade', 'student_id')
+                    ->toArray();           //  ← add this
+
+        return view('grades.sheet', compact('course', 'students', 'grades'));
     }
 
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
-    {
-        //
-    }
-
-    /**
-     * Store a newly created resource in storage.
-     */
     public function store(Request $request, Course $course)
     {
         $data = $request->validate([
             'student_id' => 'required|exists:students,id',
-            'grade'      => 'required|string|in:A,B,C,D,F', // tighter rule (optional)
+            'grade'      => 'required|string|in:A,B,C,D,F',
         ]);
 
         Grade::updateOrCreate(
             ['course_id' => $course->id, 'student_id' => $data['student_id']],
-            ['grade'     => $data['grade']],
+            ['grade'     => $data['grade']]
         );
 
-        return redirect()->route('grades.index', $course)->with('success', 'Grade saved');
+        return redirect()->route('grades.index', $course)
+                         ->with('success', 'Grade saved');
     }
 
-    /** Student’s own dashboard */
+    public function saveSheet(Request $request, Course $course)
+    {
+        $data = $request->validate([
+            'grades'   => 'array',
+            'grades.*' => 'nullable|in:A,B,C,D,F',
+        ]);
+
+        foreach ($data['grades'] as $studentId => $grade) {
+            if ($grade === null || $grade === '') {
+                continue;
+            }
+            Grade::updateOrCreate(
+                ['course_id' => $course->id, 'student_id' => $studentId],
+                ['grade'     => $grade]
+            );
+        }
+
+        return back()->with('success', 'Grades updated');
+    }
+
     public function studentView()
     {
         $student = auth()->user()->student;
         abort_if(!$student, 403);
 
         $grades = Grade::with('course')
-                ->where('student_id', $student->id)->get();
+                 ->where('student_id', $student->id)->get();
 
         return view('grades.my', compact('grades'));
-    }
-
-    /**
-     * Display the specified resource.
-     */
-    public function show(Grade $grade)
-    {
-        //
-    }
-
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(Grade $grade)
-    {
-        //
-    }
-
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, Grade $grade)
-    {
-        //
-    }
-
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(Grade $grade)
-    {
-        //
     }
 }

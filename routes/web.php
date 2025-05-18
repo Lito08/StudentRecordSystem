@@ -30,10 +30,12 @@ Route::middleware(['auth','role:admin'])->group(function () {
     Route::resource('courses',   CourseController::class)->except(['show', 'index']);
 });
 
-
 Route::middleware(['auth','role:admin|lecturer'])->group(function () {
-    Route::get ('courses/{course}/grades', [GradeController::class,'index'])->name('grades.index');
-    Route::post('courses/{course}/grades', [GradeController::class,'store'])->name('grades.store');
+    Route::post('courses/{course}/grades',        [GradeController::class,'store'])->name('grades.store');
+
+    /* NEW mark-sheet */
+    Route::get ('courses/{course}/grades-sheet',  [GradeController::class,'sheet'])->name('grades.sheet');
+    Route::post('courses/{course}/grades-sheet',  [GradeController::class,'saveSheet'])->name('grades.saveSheet');
 });
 
 Route::middleware(['auth','role:student'])->get('/my-grades',
